@@ -1,0 +1,59 @@
+/* Screen Feed */
+.feedContainer {
+  height: 180px;
+  width: 200px;
+  border-radius: 5px;
+  position: absolute;
+  right: 25px;
+  bottom: 5px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+}
+.feedVideo {
+  height: 180px;
+  width: 200px;
+  cursor: pointer;
+}
+.feedContainer:hover > .feedContainer {
+  border: 3px solid #000000;
+}
+.feedContainer:hover > .feedVideo {
+  transform: scale(1.25);
+}
+
+/* Camera Feed */
+.cameraFeedContainer {
+  left: 5px;
+  bottom: 5px;
+  width: 180px;
+  height: 180px;
+  border-radius: 50%;
+  position: fixed;
+  -webkit-mask-image: -webkit-radial-gradient(circle, white 100%, black 100%);
+}
+.cameraVideo {
+  position: absolute;
+  top: -90px;
+  left: -90px;
+  width: 360px;
+  height: 360px;
+  border-radius: 50%;
+  transform: scaleX(-1);
+  -webkit-transform: scaleX(-1);
+}
+
+/* Player */
+.playerContainer {
+  height: 100vh;
+  width: 100vw;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+.videoPlayer {
+  width: 90%;
+  height: 92%;
+}
