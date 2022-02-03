@@ -51,6 +51,7 @@ export default function Home() {
     try {
       stream = await navigator.mediaDevices.getDisplayMedia({
         video: true,
+        audio: true
       });
 
       audio = await navigator.mediaDevices.getUserMedia({
@@ -59,10 +60,10 @@ export default function Home() {
           noiseSuppression: true,
           sampleRate: 44100,
         },
-        video: {
-          width: { ideal: 1280 },
-          height: { ideal: 720 },
-        },
+        // video: {
+        //   width: { ideal: 1280 },
+        //   height: { ideal: 720 },
+        // },
       });
 
       camera = await navigator.mediaDevices.getUserMedia({
@@ -150,8 +151,8 @@ export default function Home() {
   const handleResume = (e) => {};
 
   const startRecording = async () => {
-    await setupStream();
     setIsRecording(true);
+    await setupStream();
     setRecordingState("RECORDING");
 
     if (stream && audio) {
