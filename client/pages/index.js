@@ -1,5 +1,5 @@
 import styles from "../styles/Home.module.css";
-import { FaPlayCircle } from "react-icons/fa";
+import { FaPlayCircle, FaPause } from "react-icons/fa";
 import Controls from "../src/components/Controls";
 import ScreenFeed from "../src/components/ScreenFeed";
 import CameraFeed from "../src/components/CameraFeed";
@@ -7,8 +7,7 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import randomColorGenerator from "../src/utils/randomColor";
 
-  
-import { useRouter } from 'next/router'
+import { useRouter } from "next/router";
 
 export default function Home() {
   let stream = null;
@@ -18,9 +17,13 @@ export default function Home() {
   let chunks = [];
   // let recorder = null;
 
+  const router = useRouter();
+
   const [isRecording, setIsRecording] = useState(false);
   const [recorder, setRecorder] = useState(null);
-  const [color, setColor] = useState({ color1: '#fafafa', color2: '#ddccee'})
+  const [color, setColor] = useState({ color1: "#fafafa", color2: "#ddccee" });
+  const [recordingState, setRecordingState] = useState("NO_RECORDING");
+  const [timer, setTimer] = useState(0);
 
   useEffect(() => {
     const color1 = randomColorGenerator();
@@ -28,12 +31,17 @@ export default function Home() {
 
     setColor({
       color1: color1,
-      color2: color2
-    })
+      color2: color2,
+    });
   }, []);
 
+  useEffect(() => {
+    let interval = null;
 
-  const router = useRouter()
+    // if() {
+
+    // }
+  }, []);
 
   const setupStream = async () => {
     try {
@@ -47,10 +55,10 @@ export default function Home() {
           noiseSuppression: true,
           sampleRate: 44100,
         },
-        video: {
-          width: { ideal: 1280 },
-          height: { ideal: 720 },
-        },
+        // video: {
+        //   width: { ideal: 1280 },
+        //   height: { ideal: 720 },
+        // },
       });
 
       camera = await navigator.mediaDevices.getUserMedia({
@@ -65,6 +73,7 @@ export default function Home() {
       });
 
       setupVideoFeedback();
+      setupCameraFeedback();
     } catch (err) {
       console.error(err);
     }
@@ -72,22 +81,26 @@ export default function Home() {
 
   const setupVideoFeedback = function () {
     if (stream) {
-      const video = document.querySelector("#screen-feedback");
-      video.srcObject = stream;
-      video.play();
-    }
-    if (camera) {
-      const video = document.querySelector("#camera-feedback");
-      video.srcObject = camera;
-      video.play();
+      const screenVideo = document.querySelector("#screen-feedback");
+      screenVideo.srcObject = stream;
+      screenVideo.play();
     }
   };
+
+  const setupCameraFeedback = function () {
+    if (camera) {
+      const cameraVideo = document.querySelector("#camera-feedback");
+      cameraVideo.srcObject = camera;
+      cameraVideo.play();
+    }
+  }
 
   const handleDataAvailable = (e) => {
     chunks.push(e.data);
   };
 
   const handleStop = async (e) => {
+    setRecordingState("NO_RECORDING");
     const blob = new Blob(chunks, { type: "video/mp4" });
     blob.lastModified = Date.now();
     blob.name = "Recording.mp4";
@@ -95,7 +108,6 @@ export default function Home() {
     const myFile = new File([blob], blob.name, {
       type: blob.type,
     });
-    console.log(myFile);
 
     let formData = new FormData();
     formData.append("recording", myFile);
@@ -113,20 +125,29 @@ export default function Home() {
     audio.getTracks().forEach((track) => track.stop());
 
     console.log("Recording stopped");
-    router.push({
-      pathname: `/player/${response.id}`,
-      query: {
-        // path: a.data.path,
-        url: URL.createObjectURL(blob)
+    router.push(
+      {
+        pathname: `/player/${response.id}`,
+        query: {
+          // path: a.data.path,
+          url: URL.createObjectURL(blob),
+        },
+      },
+      `/player/${response.id}`,
+      {
+        scroll: true,
+        getStaticProps: true,
       }
-    }, `/player/${response.id}`, {
-      scroll: true,
-      getStaticProps: true,
-    })
+    );
   };
+
+  const handlePause = (e) => {};
+
+  const handleResume = (e) => {};
 
   const startRecording = async () => {
     setIsRecording(true);
+    setRecordingState("RECORDING");
     await setupStream();
 
     if (stream && audio) {
@@ -138,6 +159,8 @@ export default function Home() {
       let recorder = new MediaRecorder(mixedStream);
       recorder.ondataavailable = handleDataAvailable;
       recorder.onstop = handleStop;
+      recorder.onpause = handlePause;
+      recorder.onresume = handleResume;
       recorder.start(1000);
 
       setRecorder(recorder);
@@ -151,6 +174,30 @@ export default function Home() {
   const stopRecording = () => {
     recorder.stop();
     setIsRecording(false);
+    setRecordingState("NO_RECORDING");
+  };
+
+  const cancelRecording = () => {
+    setIsRecording(false);
+    setTimer(0);
+    setRecordingState("NO_RECORDING");
+    setRecorder(null);
+
+    stream = null;
+    audio = null;
+    camera = null;
+    mixedStream = null;
+    chunks = [];
+  };
+
+  const pauseRecording = () => {
+    setRecordingState("PAUSED");
+    recorder.pause();
+  };
+
+  const resumeRecording = () => {
+    setRecordingState("RECORDING");
+    recorder.resume();
   };
 
   return (
@@ -161,7 +208,7 @@ export default function Home() {
       }}
     >
       <div className={styles.main}>
-        {!isRecording && (
+        {recordingState === "NO_RECORDING" && (
           <>
             <FaPlayCircle
               className={styles.playCircle}
@@ -172,9 +219,27 @@ export default function Home() {
           </>
         )}
 
+        {recordingState === "PAUSED" && (
+          <>
+            <h3>{recordingState}</h3>
+            <FaPause
+              className={styles.playCircle}
+              onClick={resumeRecording}
+              title="Recording Paused"
+            />
+            <small>Click to resume recording...</small>
+          </>
+        )}
+
         {isRecording && (
           <>
-            <Controls stopRecording={stopRecording} />
+            <Controls
+              recordingState={recordingState}
+              stopRecording={stopRecording}
+              pauseRecording={pauseRecording}
+              resumeRecording={resumeRecording}
+              cancelRecording={cancelRecording}
+            />
             <ScreenFeed isRecording={isRecording} />
             <CameraFeed isRecording={isRecording} />
           </>
