@@ -38,10 +38,14 @@ export default function Home() {
   useEffect(() => {
     let interval = null;
 
-    // if() {
+    if (recordingState === "RECORDING" && isRecording) {
+      interval = setInterval(() => {
+        setTimer((prevTime) => prevTime + 10);
+      }, 10);
+    }
 
-    // }
-  }, []);
+    return () => clearInterval(interval);
+  }, [recordingState, isRecording]);
 
   const setupStream = async () => {
     try {
@@ -55,10 +59,10 @@ export default function Home() {
           noiseSuppression: true,
           sampleRate: 44100,
         },
-        // video: {
-        //   width: { ideal: 1280 },
-        //   height: { ideal: 720 },
-        // },
+        video: {
+          width: { ideal: 1280 },
+          height: { ideal: 720 },
+        },
       });
 
       camera = await navigator.mediaDevices.getUserMedia({
@@ -81,19 +85,19 @@ export default function Home() {
 
   const setupVideoFeedback = function () {
     if (stream) {
-      const screenVideo = document.querySelector("#screen-feedback");
-      screenVideo.srcObject = stream;
-      screenVideo.play();
+      const video = document.querySelector("#screen-feedback");
+      video.srcObject = stream;
+      video.play();
     }
   };
 
   const setupCameraFeedback = function () {
     if (camera) {
-      const cameraVideo = document.querySelector("#camera-feedback");
-      cameraVideo.srcObject = camera;
-      cameraVideo.play();
+      const video = document.querySelector("#camera-feedback");
+      video.srcObject = camera;
+      video.play();
     }
-  }
+  };
 
   const handleDataAvailable = (e) => {
     chunks.push(e.data);
@@ -146,9 +150,9 @@ export default function Home() {
   const handleResume = (e) => {};
 
   const startRecording = async () => {
+    await setupStream();
     setIsRecording(true);
     setRecordingState("RECORDING");
-    await setupStream();
 
     if (stream && audio) {
       mixedStream = new MediaStream([
@@ -167,6 +171,8 @@ export default function Home() {
 
       console.log("Recording started");
     } else {
+      setIsRecording(false);
+      setRecordingState("NO_RECORDING");
       console.warn("No stream available.");
     }
   };
@@ -208,6 +214,11 @@ export default function Home() {
       }}
     >
       <div className={styles.main}>
+        <h3>
+            <span>{("0" + Math.floor((timer/60000) % 60)).slice(-2)}</span>
+            <span>:</span>
+            <span>{("0" + Math.floor((timer/1000) % 60)).slice(-2)}</span>
+        </h3>
         {recordingState === "NO_RECORDING" && (
           <>
             <FaPlayCircle
