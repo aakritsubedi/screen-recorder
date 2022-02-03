@@ -60,10 +60,10 @@ export default function Home() {
           noiseSuppression: true,
           sampleRate: 44100,
         },
-        // video: {
-        //   width: { ideal: 1280 },
-        //   height: { ideal: 720 },
-        // },
+        video: {
+          width: { ideal: 1280 },
+          height: { ideal: 720 },
+        },
       });
 
       camera = await navigator.mediaDevices.getUserMedia({
