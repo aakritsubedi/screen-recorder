@@ -51,7 +51,7 @@ export default function Home() {
     try {
       stream = await navigator.mediaDevices.getDisplayMedia({
         video: true,
-        audio: true
+        audio: true,
       });
 
       audio = await navigator.mediaDevices.getUserMedia({
@@ -117,12 +117,17 @@ export default function Home() {
     let formData = new FormData();
     formData.append("recording", myFile);
 
-    let response = await axios.post("http://localhost:8080/video", formData, {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    });
-    response = response.data;
+    let response;
+    try {
+      response = await axios.post("http://localhost:8080/video", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+      response = response.data;
+    } catch (e) {
+      console.log("Backend currently not setup");
+    }
 
     chunks = [];
 
@@ -130,20 +135,23 @@ export default function Home() {
     audio.getTracks().forEach((track) => track.stop());
 
     console.log("Recording stopped");
+    const path = response ? `/player/${response.id}` : `/player/no-api`;
+    
     router.push(
       {
-        pathname: `/player/${response.id}`,
+        pathname: path,
         query: {
           // path: a.data.path,
           url: URL.createObjectURL(blob),
         },
       },
-      `/player/${response.id}`,
+      path,
       {
         scroll: true,
         getStaticProps: true,
       }
     );
+
   };
 
   const handlePause = (e) => {};
@@ -216,9 +224,9 @@ export default function Home() {
     >
       <div className={styles.main}>
         <h3>
-            <span>{("0" + Math.floor((timer/60000) % 60)).slice(-2)}</span>
-            <span>:</span>
-            <span>{("0" + Math.floor((timer/1000) % 60)).slice(-2)}</span>
+          <span>{("0" + Math.floor((timer / 60000) % 60)).slice(-2)}</span>
+          <span>:</span>
+          <span>{("0" + Math.floor((timer / 1000) % 60)).slice(-2)}</span>
         </h3>
         {recordingState === "NO_RECORDING" && (
           <>
