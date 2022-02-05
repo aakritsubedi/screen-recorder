@@ -1,5 +1,5 @@
 import styles from "../styles/Home.module.css";
-import { FaPlayCircle, FaPause } from "react-icons/fa";
+import { FaPlayCircle, FaPause, FaSyncAlt } from "react-icons/fa";
 import Controls from "../src/components/Controls";
 import ScreenFeed from "../src/components/ScreenFeed";
 import CameraFeed from "../src/components/CameraFeed";
@@ -25,7 +25,7 @@ export default function Home() {
   const [recordingState, setRecordingState] = useState("NO_RECORDING");
   const [timer, setTimer] = useState(0);
 
-  useEffect(() => {
+  const setBgColor = () => {
     const color1 = randomColorGenerator();
     const color2 = randomColorGenerator();
 
@@ -33,6 +33,10 @@ export default function Home() {
       color1: color1,
       color2: color2,
     });
+  }
+
+  useEffect(() => {
+    setBgColor();
   }, []);
 
   useEffect(() => {
@@ -236,6 +240,8 @@ export default function Home() {
               title="Start Recording"
             />
             <small>Click to start recording...</small>
+            <br />
+            <FaSyncAlt size="25" onClick={setBgColor} title="Change Background Color" />
           </>
         )}
 
@@ -248,6 +254,8 @@ export default function Home() {
               title="Recording Paused"
             />
             <small>Click to resume recording...</small>
+            <br />
+            <FaSyncAlt size="25" onClick={setBgColor} title="Change Background Color" />
           </>
         )}
 
