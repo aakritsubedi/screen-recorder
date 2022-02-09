@@ -12,8 +12,19 @@
   align-items: center;
 }
 .playCircle {
-  color: #242B2E;
+  color: #242b2e;
   height: 100px;
   width: 100px;
   cursor: pointer;
+}
+
+.toggleButton {
+  margin: 25px 0;
+  display: flex;
+  flex-direction: "column";
+  justify-content: "center";
+  align-items: "center";
+}
+.toggleButton label{
+  margin: 2px 5px;
 }

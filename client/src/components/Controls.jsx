@@ -43,6 +43,7 @@ export default function Controls({
         onClick={cancelRecording}
         title="Cancel Recording"
       />
+      
     </div>
   );
 }

@@ -7,6 +7,8 @@ import { useEffect, useState, useRef } from "react";
 import axios from "axios";
 import randomColorGenerator from "../src/utils/randomColor";
 import { useRouter } from "next/router";
+import Toggle from "react-toggle";
+import "react-toggle/style.css";
 
 export default function Home() {
   let stream = null;
@@ -24,9 +26,11 @@ export default function Home() {
   const [recordingState, setRecordingState] = useState("NO_RECORDING");
   const [timer, setTimer] = useState(0);
   const [myStream, setMyStream] = useState(null);
+  const [meetingLink, setMeetingLink] = useState(null);
 
   const peerInstance = useRef(null);
   const [peerId, setPeerId] = useState("");
+  const [isLiveShareEnabled, setIsLiveShareEnabled] = useState(true);
 
   const setBgColor = () => {
     const color1 = randomColorGenerator();
@@ -223,30 +227,36 @@ export default function Home() {
     recorder.resume();
   };
 
+  const toggleLiveShare = () => {
+    setIsLiveShareEnabled((prev) => !prev);
+  };
+
   useEffect(() => {
-    import("peerjs").then(({ default: Peer }) => {
-      const peer = new Peer();
+    if (myStream && isLiveShareEnabled) {
+      import("peerjs").then(({ default: Peer }) => {
+        const peer = new Peer();
 
-      peer.on("open", (id) => {
-        setPeerId(id);
-        console.log('Meeting Link: ', `http://localhost:3001/share/${id}`);
-      });
-
-      peer.on("call", async (call) => {
-        console.log(myStream);
-        call.answer(myStream);
-        call.on("stream", function (remoteStream) {
-          console.log('Called Received');
-          const video = document.querySelector("#remote-feedback");
-          video.srcObject = remoteStream;
-          video.play();
+        peer.on("open", (id) => {
+          setPeerId(id);
+          const meetingLink = `${window.location.href}/share/${id}`
+          setMeetingLink(meetingLink);
         });
-      });
 
-      peerInstance.current = peer;
-      console.log(peerInstance);
-    });
-  }, [myStream]);
+        peer.on("call", async (call) => {
+          call.answer(myStream);
+          call.on("stream", function (remoteStream) {
+            console.log("Called Received");
+            const video = document.querySelector("#remote-feedback");
+            video.srcObject = remoteStream;
+            video.play();
+          });
+        });
+
+        peerInstance.current = peer;
+        console.log(peerInstance);
+      });
+    }
+  }, [myStream, isLiveShareEnabled]);
 
   return (
     <div
@@ -275,6 +285,15 @@ export default function Home() {
               onClick={setBgColor}
               title="Change Background Color"
             />
+
+            <div className={styles.toggleButton}>
+              <Toggle
+                id="live-share"
+                defaultChecked={isLiveShareEnabled}
+                onChange={toggleLiveShare}
+              />
+              <label htmlFor="live-share">Share your screen</label>
+            </div>
           </>
         )}
 
@@ -298,6 +317,7 @@ export default function Home() {
 
         {isRecording && (
           <>
+            
             <Controls
               recordingState={recordingState}
               stopRecording={stopRecording}
@@ -305,9 +325,9 @@ export default function Home() {
               resumeRecording={resumeRecording}
               cancelRecording={cancelRecording}
             />
-            <ScreenFeed isRecording={isRecording} />
+            <ScreenFeed isRecording={isRecording} meetingLink={meetingLink} />
             <CameraFeed isRecording={isRecording} />
-            <video id="remote-feedback" style={{ display: 'none'}} />
+            <video id="remote-feedback" style={{ display: "none" }} />
           </>
         )}
       </div>

@@ -7,7 +7,7 @@
   right: 25px;
   bottom: 5px;
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
 }
@@ -15,12 +15,6 @@
   height: 180px;
   width: 200px;
   cursor: pointer;
-}
-.feedContainer:hover > .feedContainer {
-  border: 3px solid #000000;
-}
-.feedContainer:hover > .feedVideo {
-  transform: scale(1.25);
 }
 
 /* Camera Feed */
