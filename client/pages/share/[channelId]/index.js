@@ -6,13 +6,12 @@ import React, { useEffect, useRef, useState } from "react";
 export default function Share() {
   const router = useRouter();
   const { channelId } = router.query;
-
+  const [isStreamAvailable, setIsStreamAvailable] = useState(false);
   const peerInstance = useRef(null);
 
   useEffect(() => {
     import("peerjs").then(({ default: Peer }) => {
       const peer = new Peer();
-
 
       peerInstance.current = peer;
     });
@@ -31,6 +30,7 @@ export default function Share() {
     });
     const call = peerInstance.current.call(channelId, camera);
     call.on("stream", (remoteStream) => {
+      setIsStreamAvailable(true);
       const video = document.querySelector("#remote-feedback");
       video.srcObject = remoteStream;
       video.play();
@@ -39,9 +39,11 @@ export default function Share() {
 
   return (
     <div className={styles.playerContainer}>
-      <video className={styles.videoPlayer} id="camera-feedback" autoPlay />
-      <button onClick={() => call(channelId)}>Click Me</button>
-      <video className={styles.videoPlayer} id="remote-feedback" autoPlay />
+      {!isStreamAvailable ? (
+        <button onClick={() => call(channelId)}>Click Me</button>
+      ) : (
+        <video className={styles.videoPlayer} id="remote-feedback" autoPlay />
+      )}
     </div>
   );
 }
