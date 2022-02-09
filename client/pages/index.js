@@ -3,10 +3,9 @@ import { FaPlayCircle, FaPause, FaSyncAlt } from "react-icons/fa";
 import Controls from "../src/components/Controls";
 import ScreenFeed from "../src/components/ScreenFeed";
 import CameraFeed from "../src/components/CameraFeed";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import axios from "axios";
 import randomColorGenerator from "../src/utils/randomColor";
-
 import { useRouter } from "next/router";
 
 export default function Home() {
@@ -24,6 +23,10 @@ export default function Home() {
   const [color, setColor] = useState({ color1: "#fafafa", color2: "#ddccee" });
   const [recordingState, setRecordingState] = useState("NO_RECORDING");
   const [timer, setTimer] = useState(0);
+  const [myStream, setMyStream] = useState(null);
+
+  const peerInstance = useRef(null);
+  const [peerId, setPeerId] = useState("");
 
   const setBgColor = () => {
     const color1 = randomColorGenerator();
@@ -33,7 +36,7 @@ export default function Home() {
       color1: color1,
       color2: color2,
     });
-  }
+  };
 
   useEffect(() => {
     setBgColor();
@@ -57,6 +60,8 @@ export default function Home() {
         video: true,
         audio: true,
       });
+
+      setMyStream(stream);
 
       audio = await navigator.mediaDevices.getUserMedia({
         audio: {
@@ -140,7 +145,7 @@ export default function Home() {
 
     console.log("Recording stopped");
     const path = response ? `/player/${response.id}` : `/player/no-api`;
-    
+
     router.push(
       {
         pathname: path,
@@ -155,7 +160,6 @@ export default function Home() {
         getStaticProps: true,
       }
     );
-
   };
 
   const handlePause = (e) => {};
@@ -219,6 +223,31 @@ export default function Home() {
     recorder.resume();
   };
 
+  useEffect(() => {
+    import("peerjs").then(({ default: Peer }) => {
+      const peer = new Peer();
+
+      peer.on("open", (id) => {
+        setPeerId(id);
+        console.log('Meeting Link: ', `http://localhost:3001/share/${id}`);
+      });
+
+      peer.on("call", async (call) => {
+        console.log(myStream);
+        call.answer(myStream);
+        call.on("stream", function (remoteStream) {
+          console.log('Called Received');
+          const video = document.querySelector("#remote-feedback");
+          video.srcObject = remoteStream;
+          video.play();
+        });
+      });
+
+      peerInstance.current = peer;
+      console.log(peerInstance);
+    });
+  }, [myStream]);
+
   return (
     <div
       className={styles.container}
@@ -241,7 +270,11 @@ export default function Home() {
             />
             <small>Click to start recording...</small>
             <br />
-            <FaSyncAlt size="25" onClick={setBgColor} title="Change Background Color" />
+            <FaSyncAlt
+              size="25"
+              onClick={setBgColor}
+              title="Change Background Color"
+            />
           </>
         )}
 
@@ -255,7 +288,11 @@ export default function Home() {
             />
             <small>Click to resume recording...</small>
             <br />
-            <FaSyncAlt size="25" onClick={setBgColor} title="Change Background Color" />
+            <FaSyncAlt
+              size="25"
+              onClick={setBgColor}
+              title="Change Background Color"
+            />
           </>
         )}
 
@@ -270,6 +307,7 @@ export default function Home() {
             />
             <ScreenFeed isRecording={isRecording} />
             <CameraFeed isRecording={isRecording} />
+            <video id="remote-feedback" style={{ display: 'none'}} />
           </>
         )}
       </div>
