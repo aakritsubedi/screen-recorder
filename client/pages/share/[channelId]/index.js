@@ -35,6 +35,16 @@ export default function Share() {
       video.srcObject = remoteStream;
       video.play();
     });
+
+    call.on("close", () => {
+      const video = document.querySelector("#remote-feedback");
+      video.remove();
+    });
+
+    call.on("disconnected", () => {
+      const video = document.querySelector("#remote-feedback");
+      video.remove();
+    });
   };
 
   return (

@@ -199,6 +199,7 @@ export default function Home() {
   };
 
   const stopRecording = () => {
+    peerInstance.current.disconnect();
     recorder.stop();
     setIsRecording(false);
     setRecordingState("NO_RECORDING");
@@ -253,7 +254,6 @@ export default function Home() {
         });
 
         peerInstance.current = peer;
-        console.log(peerInstance);
       });
     }
   }, [myStream, isLiveShareEnabled]);
